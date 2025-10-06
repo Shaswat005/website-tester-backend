@@ -1,5 +1,27 @@
-FROM openjdk:17-jdk-slim
+# Use JDK image to build & run
+FROM eclipse-temurin:17-jdk
+
+# Set working directory
 WORKDIR /app
-COPY target/website-tester-backend-0.0.1-SNAPSHOT.jar app.jar
+
+# Copy Maven wrapper and pom.xml first (caches dependencies)
+COPY mvnw pom.xml ./
+COPY .mvn .mvn
+
+# Make sure mvnw is executable
+RUN chmod +x mvnw
+
+# Download dependencies
+RUN ./mvnw dependency:go-offline -B
+
+# Copy the rest of the project
+COPY . .
+
+# Build the Spring Boot JAR (skipping tests)
+RUN ./mvnw clean package -DskipTests
+
+# Expose port
 EXPOSE 8080
-ENTRYPOINT ["java", "-jar", "app.jar"]
+
+# Run the built JAR
+CMD ["sh", "-c", "java -jar target/*.jar"]
