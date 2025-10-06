@@ -1,23 +1,24 @@
-# Use JDK image to build & run
+# Use JDK image
 FROM eclipse-temurin:17-jdk
 
 # Set working directory
 WORKDIR /app
 
-# Copy Maven wrapper and pom.xml first (caches dependencies)
-COPY mvnw pom.xml ./
+# Copy Maven wrapper and pom.xml first
+COPY mvnw .
+COPY pom.xml .
 COPY .mvn .mvn
 
-# Make sure mvnw is executable
-RUN chmod +x mvnw
+# Make mvnw executable (run after copying)
+RUN ["chmod", "+x", "mvnw"]
 
-# Download dependencies
+# Download dependencies offline
 RUN ./mvnw dependency:go-offline -B
 
 # Copy the rest of the project
 COPY . .
 
-# Build the Spring Boot JAR (skipping tests)
+# Build the Spring Boot JAR
 RUN ./mvnw clean package -DskipTests
 
 # Expose port
