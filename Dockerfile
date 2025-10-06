@@ -1,28 +1,26 @@
-# Use JDK image
-FROM eclipse-temurin:17-jdk
+# Use Maven + JDK image
+FROM maven:3.9.2-eclipse-temurin-17 AS build
 
 # Set working directory
 WORKDIR /app
 
-# Copy Maven wrapper and pom.xml first
-COPY mvnw .
+# Copy everything
 COPY pom.xml .
-COPY .mvn .mvn
+COPY src ./src
 
-# Make mvnw executable (run after copying)
-RUN ["chmod", "+x", "mvnw"]
+# Build Spring Boot JAR
+RUN mvn clean package -DskipTests
 
-# Download dependencies offline
-RUN ./mvnw dependency:go-offline -B
+# Use a lightweight JDK image to run the app
+FROM eclipse-temurin:17-jdk
 
-# Copy the rest of the project
-COPY . .
+WORKDIR /app
 
-# Build the Spring Boot JAR
-RUN ./mvnw clean package -DskipTests
+# Copy built JAR from build stage
+COPY --from=build /app/target/*.jar app.jar
 
 # Expose port
 EXPOSE 8080
 
-# Run the built JAR
-CMD ["sh", "-c", "java -jar target/*.jar"]
+# Run the JAR
+CMD ["java", "-jar", "app.jar"]
