@@ -24,3 +24,6 @@ EXPOSE 8080
 
 # Run the JAR
 CMD ["java", "-jar", "app.jar"]
+
+# Run the JAR on Render's assigned port
+CMD ["sh", "-c", "java -Dserver.port=$PORT -jar app.jar"]
