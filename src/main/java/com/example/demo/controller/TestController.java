@@ -2,17 +2,19 @@ package com.example.demo.controller;
 
 import com.example.demo.entity.TestResult;
 import com.example.demo.service.SeleniumTestService;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/tests")
 @CrossOrigin(origins = {
-	    "https://website-tester-backend.onrender.com",
-	    "http://localhost:3000"
-	})
-
+        "https://website-tester-backend.onrender.com",
+        "http://localhost:3000"
+})
 public class TestController {
 
     private final SeleniumTestService seleniumTestService;
@@ -22,8 +24,15 @@ public class TestController {
     }
 
     @PostMapping("/run")
-    public List<TestResult> runTests(@RequestBody UrlRequest request) {
-        return seleniumTestService.runTests(request.getUrl());
+    public ResponseEntity<?> runTests(@RequestBody UrlRequest request) {
+        try {
+            List<TestResult> results = seleniumTestService.runTests(request.getUrl());
+            return ResponseEntity.ok(results);
+        } catch (Exception e) {
+            e.printStackTrace(); // logs on Render
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", e.getMessage()));
+        }
     }
 
     public static class UrlRequest {
@@ -31,20 +40,4 @@ public class TestController {
         public String getUrl() { return url; }
         public void setUrl(String url) { this.url = url; }
     }
-    @RestController
-    @RequestMapping("/selenium")
-    public class SeleniumController {
-
-        private final SeleniumTestService service;
-
-        public SeleniumController(SeleniumTestService service) {
-            this.service = service;
-        }
-
-        @GetMapping("/run")
-        public List<TestResult> run(@RequestParam String url) {
-            return service.runTests(url);
-        }
-    }
-
 }
