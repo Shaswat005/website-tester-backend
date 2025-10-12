@@ -8,7 +8,11 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/tests")
-@CrossOrigin(origins = "http://localhost:3000")
+@CrossOrigin(origins = {
+	    "https://website-tester-backend.onrender.com",
+	    "http://localhost:3000"
+	})
+
 public class TestController {
 
     private final SeleniumTestService seleniumTestService;
